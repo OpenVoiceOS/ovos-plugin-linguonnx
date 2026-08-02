@@ -3,9 +3,9 @@ requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ovos-lang-detect-plugin-lingonnx"
+name = "ovos-lang-detect-plugin-linguonnx"
 dynamic = ["version"]
-description = "OVOS language detection plugin using lingonnx (GlotLID/ONNX)"
+description = "OVOS language detection plugin using linguonnx (GlotLID/ONNX)"
 readme = "README.md"
 license = { text = "Apache-2.0" }
 authors = [
@@ -13,7 +13,7 @@ authors = [
 ]
 requires-python = ">=3.8"
 dependencies = [
-    "lingonnx",
+    "linguonnx",
     "ovos-plugin-manager>=2.1.0,<3.0.0"
 ]
 
@@ -21,10 +21,10 @@ dependencies = [
 test = ["pytest"]
 
 [project.entry-points."opm.lang.detect"]
-ovos-lang-detect-plugin-lingonnx = "ovos_lang_detect_plugin_lingonnx:LingoNNXLangDetectPlugin"
+ovos-lang-detect-plugin-linguonnx = "ovos_lang_detect_plugin_linguonnx:LinguONNXLangDetectPlugin"
 
 [tool.setuptools.dynamic]
-version = { attr = "ovos_lang_detect_plugin_lingonnx.version.__version__" }
+version = { attr = "ovos_lang_detect_plugin_linguonnx.version.__version__" }
 
 [tool.setuptools.packages.find]
-include = ["ovos_lang_detect_plugin_lingonnx*"]
+include = ["ovos_lang_detect_plugin_linguonnx*"]

@@ -1,16 +1,16 @@
-"""OVOS language-detection plugin wrapping the lingonnx GlotLID detector."""
+"""OVOS language-detection plugin wrapping the linguonnx GlotLID detector."""
 
 from typing import Dict, Optional, Set
 
 from ovos_plugin_manager.templates.language import LanguageDetector
 
-from ovos_lang_detect_plugin_lingonnx.version import __version__
+from ovos_lang_detect_plugin_linguonnx.version import __version__
 
 DEFAULT_MODEL = "glotlid-int8"
 
 
-class LingoNNXLangDetectPlugin(LanguageDetector):
-    """LanguageDetector implementation backed by ``lingonnx`` (GlotLID/ONNX).
+class LinguONNXLangDetectPlugin(LanguageDetector):
+    """LanguageDetector implementation backed by ``linguonnx`` (GlotLID/ONNX).
 
     The underlying model is only loaded on first call to :meth:`detect`,
     :meth:`detect_probs`, :meth:`detect_raw` or :attr:`available_languages` -
@@ -27,12 +27,12 @@ class LingoNNXLangDetectPlugin(LanguageDetector):
 
     @property
     def collapse_varieties(self) -> bool:
-        # lingonnx itself defaults this to False (fidelity: "ajp-Arab" is a
+        # linguonnx itself defaults this to False (fidelity: "ajp-Arab" is a
         # real, useful answer on its own). OVOS callers use the detected tag
         # to pick a TTS voice or a translation target, and those pipelines
         # only know macrolanguages - "ajp-Arab" would look unsupported where
         # "ar" is. So the plugin flips the default to True; set
-        # collapse_varieties: false in config to get lingonnx's raw fidelity.
+        # collapse_varieties: false in config to get linguonnx's raw fidelity.
         return self.config.get("collapse_varieties", True)
 
     @property
@@ -41,9 +41,9 @@ class LingoNNXLangDetectPlugin(LanguageDetector):
 
     @property
     def detector(self):
-        """Lazily load (and cache) the lingonnx detector instance."""
+        """Lazily load (and cache) the linguonnx detector instance."""
         if self._detector is None:
-            from lingonnx import load_detector
+            from linguonnx import load_detector
             self._detector = load_detector(self.model)
         return self._detector
 
@@ -61,6 +61,6 @@ class LingoNNXLangDetectPlugin(LanguageDetector):
         return self.detector.available_languages
 
 
-LanguageDetectorPlugin = LingoNNXLangDetectPlugin
+LanguageDetectorPlugin = LinguONNXLangDetectPlugin
 
-__all__ = ["LingoNNXLangDetectPlugin", "LanguageDetectorPlugin", "__version__"]
+__all__ = ["LinguONNXLangDetectPlugin", "LanguageDetectorPlugin", "__version__"]
