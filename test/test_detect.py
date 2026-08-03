@@ -2,7 +2,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ovos_lang_detect_plugin_linguonnx import LinguONNXLangDetectPlugin, DEFAULT_MODEL
+from ovos_plugin_linguonnx import LinguONNXLangDetectPlugin
+from ovos_plugin_linguonnx.detect import DEFAULT_MODEL
 
 
 def make_mock_detector():

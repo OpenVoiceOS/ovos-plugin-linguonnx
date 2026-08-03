@@ -3,9 +3,9 @@ requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ovos-lang-detect-plugin-linguonnx"
+name = "ovos-plugin-linguonnx"
 dynamic = ["version"]
-description = "OVOS language detection plugin using linguonnx (GlotLID/ONNX)"
+description = "OVOS language detection and translation plugins using linguonnx (ONNX, offline)"
 readme = "README.md"
 license = { text = "Apache-2.0" }
 authors = [
@@ -20,11 +20,21 @@ dependencies = [
 [project.optional-dependencies]
 test = ["pytest"]
 
+[project.urls]
+Homepage = "https://github.com/OpenVoiceOS/ovos-plugin-linguonnx"
+linguonnx = "https://github.com/OpenVoiceOS/linguonnx"
+
 [project.entry-points."opm.lang.detect"]
-ovos-lang-detect-plugin-linguonnx = "ovos_lang_detect_plugin_linguonnx:LinguONNXLangDetectPlugin"
+ovos-lang-detect-plugin-linguonnx = "ovos_plugin_linguonnx:LinguONNXLangDetectPlugin"
+
+[project.entry-points."opm.lang.translate"]
+ovos-translate-plugin-linguonnx = "ovos_plugin_linguonnx:LinguONNXTranslatePlugin"
 
 [tool.setuptools.dynamic]
-version = { attr = "ovos_lang_detect_plugin_linguonnx.version.__version__" }
+version = { attr = "ovos_plugin_linguonnx.version.__version__" }
 
 [tool.setuptools.packages.find]
-include = ["ovos_lang_detect_plugin_linguonnx*"]
+include = ["ovos_plugin_linguonnx*"]
+
+[tool.pytest.ini_options]
+markers = ["network: downloads models from HuggingFace and runs them"]
