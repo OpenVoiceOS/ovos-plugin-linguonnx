@@ -162,3 +162,42 @@ def test_real_translation_end_to_end():
     assert isinstance(out, str) and out.strip()
     assert out.strip().lower() != "good morning, my friend."
     assert "gl" in plugin.supported_translations("en")
+
+
+def test_no_route_becomes_a_valueerror():
+    # Callers that only know the OVOS interface cannot import linguonnx's
+    # exception types, so an unsupported pair must arrive as a builtin.
+    from linguonnx.translate import NoRouteError
+
+    mock_tx = make_mock_translator()
+    mock_tx.translate.side_effect = NoRouteError("no route from 'en' to 'xx'")
+    with patch("linguonnx.load_translator", return_value=mock_tx):
+        with pytest.raises(ValueError, match="no route from 'en' to 'xx'") as caught:
+            LinguONNXTranslatePlugin().translate("hi", "xx", "en")
+        assert not isinstance(caught.value, NoRouteError)
+        assert isinstance(caught.value.__cause__, NoRouteError)
+
+
+def test_uncached_model_becomes_a_runtimeerror():
+    from linguonnx.model_manager import DownloadTooLargeError
+
+    mock_tx = make_mock_translator()
+    mock_tx.translate.side_effect = DownloadTooLargeError("needs a 157 MB download")
+    with patch("linguonnx.load_translator", return_value=mock_tx):
+        with pytest.raises(RuntimeError, match="157 MB") as caught:
+            LinguONNXTranslatePlugin().translate("hi", "gl", "en")
+        assert not isinstance(caught.value, DownloadTooLargeError)
+        assert isinstance(caught.value.__cause__, DownloadTooLargeError)
+
+
+def test_a_download_error_is_not_reported_as_an_unsupported_pair():
+    # RuntimeError, not ValueError: the pair is fine, the host is not. A server
+    # mapping ValueError to 4xx must not blame the caller for a cold cache.
+    from linguonnx.model_manager import DownloadTooLargeError
+
+    mock_tx = make_mock_translator()
+    mock_tx.translate.side_effect = DownloadTooLargeError("cold")
+    with patch("linguonnx.load_translator", return_value=mock_tx):
+        with pytest.raises(RuntimeError) as caught:
+            LinguONNXTranslatePlugin().translate("hi", "gl", "en")
+        assert not isinstance(caught.value, ValueError)

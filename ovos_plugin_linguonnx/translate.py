@@ -108,9 +108,26 @@ class LinguONNXTranslatePlugin(LanguageTranslator):
         Both tags may carry a region (``pt-PT``, ``en-US``); linguonnx
         normalizes them. Unset arguments fall back to the configured language.
         """
+        from linguonnx.model_manager import DownloadTooLargeError
+        from linguonnx.translate import NoRouteError
+
         target = target or self.default_language
         source = source or self.config.get("lang") or DEFAULT_LANG
-        return self.translator.translate(text, src=source, tgt=target)
+        try:
+            return self.translator.translate(text, src=source, tgt=target)
+        except NoRouteError as err:
+            # An unsupported pair is the caller's problem, not a fault. Callers
+            # that only know the OVOS interface cannot import linguonnx's
+            # exception types to tell the two apart, so this becomes a plain
+            # ValueError and a server can answer 4xx instead of 5xx. linguonnx's
+            # own message says which bound blocked the pair, so it is kept.
+            raise ValueError(str(err)) from err
+        except DownloadTooLargeError as err:
+            # The pair is routable; the host simply has not cached the model and
+            # the download budget refused to fetch it on the request path. That
+            # is a deployment state, so it stays a RuntimeError - retrying the
+            # same request will not help until someone prefetches.
+            raise RuntimeError(str(err)) from err
 
     @property
     def available_languages(self) -> Set[str]:
