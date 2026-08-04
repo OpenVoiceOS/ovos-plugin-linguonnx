@@ -10,9 +10,15 @@ jobs:
     uses: OpenVoiceOS/gh-automations/.github/workflows/license-check.yml@dev
     secrets: inherit
     with:
-      # fsspec — BSD-3-Clause (https://github.com/fsspec/filesystem_spec), but
-      # recent releases dropped the Trove license classifier the checker reads,
-      # so pip-licenses reports "Error" instead of the real license. Pulled in
-      # transitively via huggingface_hub, which linguonnx uses for model
-      # downloads. False positive, not a copyleft risk.
-      exclude_packages: "fsspec"
+      # fsspec — BSD-3-Clause (SPDX License-Expression, PEP 639). pilosus's checker
+      # cannot parse the PEP 639 `License-Expression` metadata field yet, so it
+      # reports "Error" instead of the actual (permissive) license. Same class of
+      # false positive as the tqdm/self-package gotcha documented in gh-automations'
+      # license-check.yml. Pulled in transitively via huggingface_hub (used by the
+      # linguonnx dependency for model downloads).
+      #
+      # NOTE: the exclude_packages input to the reusable workflow is a PCRE regex
+      # matched against pilosus's resolved "name==version" requirement string, not
+      # a plain substring — a bare "fsspec" does not reliably exclude it. Anchor
+      # the pattern the same way linguonnx's own license_check.yml does.
+      exclude_packages: '(?i:^fsspec([=<>!~ @;].*)?$)'
