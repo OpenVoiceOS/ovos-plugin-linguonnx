@@ -81,7 +81,9 @@ def test_no_config_passes_no_loader_kwargs():
 def test_config_passthrough_to_load_translator():
     cfg = {"prefer": "dedicated", "max_hops": 3, "pivot_ranking": "table",
            "include_noncommercial": True, "precision": "fp32",
-           "model_cache_size": 2, "num_beams": 1, "max_new_tokens": 256}
+           "model_cache_size": 2, "num_beams": 1, "max_new_tokens": 256,
+           "exclude_flagged": True, "min_chrf": 40.0,
+           "models": ["opus-mt-en-pt"]}
     mock_tx = make_mock_translator()
     with patch("linguonnx.load_translator", return_value=mock_tx) as mock_load:
         LinguONNXTranslatePlugin(dict(cfg)).translate("hi", "pt", "en")

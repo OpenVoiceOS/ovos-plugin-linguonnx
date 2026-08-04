@@ -49,6 +49,18 @@ class LinguONNXTranslatePlugin(LanguageTranslator):
         request for minutes. Unset by default, which leaves linguonnx's 8192 MB
         budget in place. Set it low on a host whose cache is pre-warmed, so a
         surprise fetch fails fast and loudly.
+    ``exclude_flagged``
+        ``False`` by default. Drop any model linguonnx's own quality sweep
+        flags - either precision scoring below 40 chrF against the FLORES-200
+        reference, or int8 trailing fp32 by more than 2 chrF. Combine with
+        ``precision: null`` to fall back to fp32 wherever int8 alone is
+        flagged.
+    ``min_chrf``
+        Drop any model scoring below this chrF against FLORES-200. Unset by
+        default, which keeps every model the other filters allow through.
+    ``models``
+        Exact registry ids to route over, overriding every other filter. A
+        list of model ids as linguonnx names them.
     ``num_beams``
         Beam width. ``4`` by default; ``1`` is greedy and about 4x faster.
     ``max_new_tokens``
@@ -79,9 +91,9 @@ class LinguONNXTranslatePlugin(LanguageTranslator):
         defaulted here, so linguonnx stays the single source of truth for what
         a default is.
         """
-        passthrough = ("prefer", "max_hops", "pivot_ranking",
-                       "include_noncommercial", "precision",
-                       "model_cache_size", "num_beams", "max_new_tokens")
+        passthrough = ("models", "model", "prefer", "max_hops", "pivot_ranking",
+                       "include_noncommercial", "precision", "exclude_flagged",
+                       "min_chrf", "model_cache_size", "num_beams", "max_new_tokens")
         return {k: self.config[k] for k in passthrough if k in self.config}
 
     # -- engine -----------------------------------------------------------

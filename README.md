@@ -83,6 +83,9 @@ native per-variety fidelity instead.
       "pivot_ranking": "auto",
       "include_noncommercial": false,
       "precision": "int8",
+      "exclude_flagged": false,
+      "min_chrf": null,
+      "models": null,
       "model_cache_size": 4,
       "max_model_mb": 8192,
       "num_beams": 4,
@@ -111,6 +114,14 @@ a default is. The values above are the `linguonnx` defaults.
   non-commercial licence on your output.
 - `precision`: `"int8"` for the quantized models, `"fp32"` for the full ones
   (roughly 4x the disk and memory), or `null` for both.
+- `exclude_flagged`: drop any model linguonnx's own quality sweep flags —
+  either precision scoring below 40 chrF against the FLORES-200 reference, or
+  int8 trailing fp32 by more than 2 chrF. Combine with `precision: null` to
+  fall back to fp32 wherever int8 alone is flagged.
+- `min_chrf`: drop any model scoring below this chrF against FLORES-200.
+  `null` keeps every model the other filters allow through.
+- `models`: exact registry ids to route over, overriding every other filter
+  above. A list of model ids as linguonnx names them.
 - `model_cache_size`: how many loaded models stay in memory at once,
   least-recently-used evicted first. The whole default graph is ~25 GB, so
   this is the knob that keeps a long-lived server from being OOM-killed.
