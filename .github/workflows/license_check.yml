@@ -9,3 +9,10 @@ jobs:
   license_check:
     uses: OpenVoiceOS/gh-automations/.github/workflows/license-check.yml@dev
     secrets: inherit
+    with:
+      # fsspec — BSD-3-Clause (https://github.com/fsspec/filesystem_spec), but
+      # recent releases dropped the Trove license classifier the checker reads,
+      # so pip-licenses reports "Error" instead of the real license. Pulled in
+      # transitively via huggingface_hub, which linguonnx uses for model
+      # downloads. False positive, not a copyleft risk.
+      exclude_packages: "fsspec"
