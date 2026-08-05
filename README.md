@@ -87,7 +87,10 @@ native per-variety fidelity instead.
       "min_chrf": null,
       "models": null,
       "model_cache_size": 4,
-      "max_model_mb": 8192,
+      "max_model_mb": 500,
+      "oversize_fallback": true,
+      "count_cached_as_free": false,
+      "max_download_mb": 8192,
       "num_beams": 4,
       "max_new_tokens": 128
     }
@@ -125,10 +128,27 @@ a default is. The values above are the `linguonnx` defaults.
 - `model_cache_size`: how many loaded models stay in memory at once,
   least-recently-used evicted first. The whole default graph is ~25 GB, so
   this is the knob that keeps a long-lived server from being OOM-killed.
-- `max_model_mb`: refuse a cold download larger than this, in MB, instead of
+- `max_model_mb`: largest single model routing may put on a route, in MB. A
+  *routing* budget, not a download one: ONNX session-load time is paid per
+  model per request, and a 1.8 GB model the `model_cache_size` cache cannot
+  keep warm turns a 6-second pair into a 165-second one. Pair it with
+  `oversize_fallback`.
+- `oversize_fallback`: makes `max_model_mb` a preference instead of a filter. A
+  pair a model under the cap can serve is served by that model; a pair
+  *nothing* under the cap covers falls back to the smallest oversized model
+  that does. Without it, a cap tuned for latency also deletes every language
+  that lives only inside the big multilingual models — on the current registry
+  a 500 MB cap takes routable languages from 586 to 249. `Route.waived_size_cap`
+  reports when the exception was used.
+- `count_cached_as_free`: whether a model already in the cache is exempt from
+  `max_model_mb`. Unset picks `false` when `oversize_fallback` is on and `true`
+  otherwise — on a warm cache the exemption waives the cap for every model
+  there is.
+- `max_download_mb`: refuse a cold download larger than this, in MB, instead of
   holding the request for minutes. Set it low on a host whose cache is
   pre-warmed, so a surprise fetch fails fast and loudly. It maps to the
-  `LINGUONNX_MAX_DOWNLOAD_MB` environment variable.
+  `LINGUONNX_MAX_DOWNLOAD_MB` environment variable. Separate from
+  `max_model_mb`, which answers a different question.
 - `num_beams`: beam width. `1` is greedy and about 4x faster.
 - `max_new_tokens`: output length cap per hop. Raise it for long input; the
   decode loop stops at the cap without warning.
@@ -160,7 +180,7 @@ that only knows the OVOS interface can still tell the two failure modes apart:
   this graph cannot serve. `linguonnx`'s own message says which bound blocked
   it (hop cap, licence filter, unrunnable model), so it is passed through.
 - **`RuntimeError`** — the pair is routable, but the model is not on disk and
-  `max_model_mb` refused to fetch it on the request path. Retrying will not
+  `max_download_mb` refused to fetch it on the request path. Retrying will not
   help; prefetch the model.
 
 A server in front of this should map the first to 4xx and the second to 5xx.

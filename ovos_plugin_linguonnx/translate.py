@@ -45,10 +45,30 @@ class LinguONNXTranslatePlugin(LanguageTranslator):
         default graph is ~25 GB, so this is the knob that keeps a long-lived
         server from being OOM-killed.
     ``max_model_mb``
+        Largest single model routing may put on a route, in MB. Unset by
+        default. This is a *routing* budget, not a download one: it exists
+        because ONNX session-load time is paid per model per request, and a
+        1.8 GB model that the ``model_cache_size`` cache cannot keep warm
+        turns a 6-second pair into a 165-second one. Pair it with
+        ``oversize_fallback``.
+    ``oversize_fallback``
+        ``False`` by default. ``True`` makes ``max_model_mb`` a preference
+        rather than a filter: a pair a model under the cap can serve is served
+        by that model, and a pair *nothing* under the cap covers falls back to
+        the smallest oversized model that does. Without it a cap tuned for
+        latency also deletes every language that exists only inside the big
+        multilingual models - on the current registry a 500 MB cap takes
+        routable languages from 586 to 249.
+    ``count_cached_as_free``
+        Whether a model already in the cache is exempt from ``max_model_mb``.
+        Unset picks ``False`` when ``oversize_fallback`` is on and ``True``
+        otherwise; on a warm cache the exemption would waive the cap for every
+        model there is.
+    ``max_download_mb``
         Refuse a cold download bigger than this, in MB, instead of holding the
-        request for minutes. Unset by default, which leaves linguonnx's 8192 MB
-        budget in place. Set it low on a host whose cache is pre-warmed, so a
-        surprise fetch fails fast and loudly.
+        request for minutes. Unset leaves linguonnx's 8192 MB budget in place.
+        Separate from ``max_model_mb`` since the two answer different
+        questions - what may be fetched, and what may be loaded per request.
     ``exclude_flagged``
         ``False`` by default. Drop any model linguonnx's own quality sweep
         flags - either precision scoring below 40 chrF against the FLORES-200
@@ -93,7 +113,8 @@ class LinguONNXTranslatePlugin(LanguageTranslator):
         """
         passthrough = ("models", "model", "prefer", "max_hops", "pivot_ranking",
                        "include_noncommercial", "precision", "exclude_flagged",
-                       "min_chrf", "model_cache_size", "num_beams", "max_new_tokens")
+                       "min_chrf", "model_cache_size", "num_beams", "max_new_tokens",
+                       "max_model_mb", "oversize_fallback", "count_cached_as_free")
         return {k: self.config[k] for k in passthrough if k in self.config}
 
     # -- engine -----------------------------------------------------------
@@ -102,11 +123,15 @@ class LinguONNXTranslatePlugin(LanguageTranslator):
     def translator(self):
         """Lazily build (and cache) the linguonnx Translator."""
         if self._translator is None:
-            # linguonnx reads the download budget from the environment at
-            # fetch time, and there is no load_translator argument for it.
-            max_model_mb = self.config.get("max_model_mb")
-            if max_model_mb is not None:
-                os.environ["LINGUONNX_MAX_DOWNLOAD_MB"] = str(int(max_model_mb))
+            # The cold-download budget is the one thing linguonnx reads from
+            # the environment at fetch time rather than from a kwarg.
+            # `max_model_mb` is deliberately NOT wired to it: it used to be,
+            # which silently made a routing budget refuse downloads too, and
+            # then made `oversize_fallback` unable to reach the very models it
+            # exists to fall back to.
+            max_download_mb = self.config.get("max_download_mb")
+            if max_download_mb is not None:
+                os.environ["LINGUONNX_MAX_DOWNLOAD_MB"] = str(int(max_download_mb))
             from linguonnx import load_translator
             self._translator = load_translator(**self.loader_kwargs)
         return self._translator

@@ -83,6 +83,8 @@ def test_config_passthrough_to_load_translator():
            "include_noncommercial": True, "precision": "fp32",
            "model_cache_size": 2, "num_beams": 1, "max_new_tokens": 256,
            "exclude_flagged": True, "min_chrf": 40.0,
+           "max_model_mb": 500, "oversize_fallback": True,
+           "count_cached_as_free": False,
            "models": ["opus-mt-en-pt"]}
     mock_tx = make_mock_translator()
     with patch("linguonnx.load_translator", return_value=mock_tx) as mock_load:
@@ -98,12 +100,36 @@ def test_unknown_config_keys_are_not_forwarded():
         mock_load.assert_called_once_with(num_beams=1)
 
 
-def test_max_model_mb_sets_env_and_is_not_a_loader_kwarg():
+def test_max_model_mb_is_a_routing_kwarg_and_not_the_download_budget():
+    """It used to set `LINGUONNX_MAX_DOWNLOAD_MB`, which conflated two limits.
+
+    `max_model_mb` bounds what routing may *load* per request - the knob that
+    keeps a 1.8 GB model off a pair a 165 MB one serves. Wiring it to the
+    download budget as well made `oversize_fallback` unusable: the fallback
+    picks a model above the cap on purpose, and the downloader would then
+    refuse to fetch it. The two limits are now separate config keys.
+    """
     mock_tx = make_mock_translator()
     old = os.environ.pop("LINGUONNX_MAX_DOWNLOAD_MB", None)
     try:
         with patch("linguonnx.load_translator", return_value=mock_tx) as mock_load:
             LinguONNXTranslatePlugin({"max_model_mb": 512}).translate("hi", "pt", "en")
+            mock_load.assert_called_once_with(max_model_mb=512)
+            assert "LINGUONNX_MAX_DOWNLOAD_MB" not in os.environ
+    finally:
+        os.environ.pop("LINGUONNX_MAX_DOWNLOAD_MB", None)
+        if old is not None:
+            os.environ["LINGUONNX_MAX_DOWNLOAD_MB"] = old
+
+
+def test_max_download_mb_sets_env_and_is_not_a_loader_kwarg():
+    """The cold-download budget is the one limit linguonnx reads from the
+    environment rather than from a kwarg, so it stays an env write."""
+    mock_tx = make_mock_translator()
+    old = os.environ.pop("LINGUONNX_MAX_DOWNLOAD_MB", None)
+    try:
+        with patch("linguonnx.load_translator", return_value=mock_tx) as mock_load:
+            LinguONNXTranslatePlugin({"max_download_mb": 512}).translate("hi", "pt", "en")
             mock_load.assert_called_once_with()
             assert os.environ["LINGUONNX_MAX_DOWNLOAD_MB"] == "512"
     finally:
@@ -112,7 +138,7 @@ def test_max_model_mb_sets_env_and_is_not_a_loader_kwarg():
             os.environ["LINGUONNX_MAX_DOWNLOAD_MB"] = old
 
 
-def test_max_model_mb_unset_leaves_env_alone():
+def test_max_download_mb_unset_leaves_env_alone():
     mock_tx = make_mock_translator()
     os.environ.pop("LINGUONNX_MAX_DOWNLOAD_MB", None)
     with patch("linguonnx.load_translator", return_value=mock_tx):
