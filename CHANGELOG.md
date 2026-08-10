@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1a1](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/tree/0.2.1a1) (2026-08-10)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/compare/0.2.0a1...0.2.1a1)
+
+**Merged pull requests:**
+
+- fix: max\_model\_mb reaches load\_translator as a routing kwarg, not an env var [\#7](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/pull/7) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.2.0a1](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/tree/0.2.0a1) (2026-08-10)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/compare/0.0.1a1...0.2.0a1)
