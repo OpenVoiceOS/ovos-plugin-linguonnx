@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from ovos_plugin_linguonnx import LinguONNXTranslatePlugin
+from ovos_plugin_manager.language import OVOSLangTranslationFactory
 
 
 def make_mock_translator():
@@ -344,3 +345,43 @@ def test_a_download_error_is_not_reported_as_an_unsupported_pair():
         with pytest.raises(RuntimeError) as caught:
             LinguONNXTranslatePlugin().translate("hi", "gl", "en")
         assert not isinstance(caught.value, ValueError)
+
+
+# -- documented config section pin -------------------------------------------
+#
+# ovos-plugin-manager resolves plugin config off a top-level `language`
+# section (`OVOSLangTranslationFactory.get_class`/`create`, which read
+# `config["language"]`, then `get_plugin_config(config, "language", module)`
+# in `ovos_plugin_manager.utils.config`). A doc that names any other section
+# key produces settings the plugin never receives.
+
+
+def test_language_section_config_reaches_load_translator():
+    mock_tx = make_mock_translator()
+    config = {
+        "language": {
+            "translation_module": "ovos-translate-plugin-linguonnx",
+            "ovos-translate-plugin-linguonnx": {"max_model_mb": 512},
+        }
+    }
+    with patch("linguonnx.load_translator", return_value=mock_tx) as mock_load:
+        plugin = OVOSLangTranslationFactory.create(config)
+        plugin.translate("hi", "pt", "en")
+        mock_load.assert_called_once_with(max_model_mb=512)
+
+
+def test_wrong_section_key_never_reaches_load_translator():
+    # Negative control: a config nested under `language_translation` (or any
+    # key other than `language`) is invisible to the factory. It must not
+    # silently produce an unconfigured plugin - it must fail to resolve a
+    # module at all.
+    config = {
+        "language_translation": {
+            "module": "ovos-translate-plugin-linguonnx",
+            "ovos-translate-plugin-linguonnx": {"max_model_mb": 512},
+        }
+    }
+    with patch("linguonnx.load_translator") as mock_load:
+        with pytest.raises(ValueError, match="translation_module"):
+            OVOSLangTranslationFactory.create(config)
+        mock_load.assert_not_called()

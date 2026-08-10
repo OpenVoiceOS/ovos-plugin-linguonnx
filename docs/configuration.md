@@ -2,8 +2,8 @@
 
 ```json
 {
-  "language_translation": {
-    "module": "ovos-translate-plugin-linguonnx",
+  "language": {
+    "translation_module": "ovos-translate-plugin-linguonnx",
     "ovos-translate-plugin-linguonnx": {
       "prefer": "fewest_hops",
       "max_hops": 2,
@@ -95,8 +95,8 @@ A deployment tuned for load latency, not disk space, looks like this:
 
 ```json
 {
-  "language_translation": {
-    "module": "ovos-translate-plugin-linguonnx",
+  "language": {
+    "translation_module": "ovos-translate-plugin-linguonnx",
     "ovos-translate-plugin-linguonnx": {
       "precision": "int8",
       "max_model_mb": 500,

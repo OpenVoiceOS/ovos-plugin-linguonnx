@@ -67,8 +67,8 @@ volumes:
   - ./mycroft.conf:/home/ovos/.config/mycroft/mycroft.conf:ro
 ```
 
-using the same `language_detection` / `language_translation` keys documented
-in [language-detection.md](language-detection.md) and
+using the same `language.detection_module` / `language.translation_module`
+keys documented in [language-detection.md](language-detection.md) and
 [configuration.md](configuration.md). `OMP_NUM_THREADS` (default `8` in the
 image) and `HF_HOME` (`/home/ovos/.cache/huggingface`) are set as environment
 variables and can be overridden with `docker run -e`.

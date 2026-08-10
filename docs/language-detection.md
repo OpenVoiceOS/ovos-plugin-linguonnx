@@ -6,8 +6,8 @@ language-detection plugin.
 
 ```json
 {
-  "language_detection": {
-    "module": "ovos-lang-detect-plugin-linguonnx",
+  "language": {
+    "detection_module": "ovos-lang-detect-plugin-linguonnx",
     "ovos-lang-detect-plugin-linguonnx": {
       "model": "glotlid-int8",
       "collapse_varieties": true,
