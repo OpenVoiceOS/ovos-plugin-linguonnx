@@ -43,6 +43,29 @@ class LinguONNXTranslatePlugin(LanguageTranslator):
         evicted first. Defaults to linguonnx's own default (4). The whole
         default graph is ~25 GB, so this is the knob that keeps a long-lived
         server from being OOM-killed.
+    ``max_loaded_mb``
+        Byte budget for the loaded-model cache, in MB. Unset by default, so
+        ``model_cache_size`` alone bounds it. Four Marian models are about
+        1.4 GB and four MADLAD-400-3B are about 20 GB, so a count alone is a
+        poor bound. This bounds what the cache *retains*; it does not bound
+        peak memory - see ``max_concurrent_translations``.
+    ``max_concurrent_translations``
+        How many translations may run at once. Unset by default, meaning no
+        limit. This is the only key that bounds peak memory: a model being
+        translated through is resident because a thread is decoding with it,
+        not because the cache kept it, so no cache setting can reach it. OVOS
+        translation endpoints are commonly served from a threadpool, so peak
+        memory otherwise scales with whatever that pool admits. Requests over
+        the limit wait for a slot instead of loading another model.
+    ``pivot_preference``
+        Ordered pivot languages to try on a two-hop route, overriding
+        linguonnx's default preference list.
+    ``max_routes``
+        How many candidate routes are scored before the best is taken.
+    ``length_penalty``
+        Beam-search length penalty. Above 1.0 favours longer output.
+    ``no_repeat_ngram_size``
+        Block repeating any n-gram of this size. ``0`` (default) disables it.
     ``max_model_mb``
         Drop any model bigger than this, in MB, from the routing graph before
         a route is even scored - a *routing* filter, not a download guard.
@@ -111,8 +134,12 @@ class LinguONNXTranslatePlugin(LanguageTranslator):
         a default is.
         """
         passthrough = ("models", "model", "prefer", "max_hops", "pivot_ranking",
+                       "pivot_preference", "max_routes",
                        "include_noncommercial", "precision", "exclude_flagged",
-                       "min_chrf", "model_cache_size", "num_beams", "max_new_tokens",
+                       "min_chrf", "model_cache_size", "max_loaded_mb",
+                       "max_concurrent_translations",
+                       "num_beams", "max_new_tokens", "length_penalty",
+                       "no_repeat_ngram_size",
                        "max_model_mb", "oversize_fallback", "count_cached_as_free")
         return {k: self.config[k] for k in passthrough if k in self.config}
 
