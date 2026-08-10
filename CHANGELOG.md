@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0a3](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/tree/0.3.0a3) (2026-08-10)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/compare/0.3.0a2...0.3.0a3)
+
+**Merged pull requests:**
+
+- docs: state the tag-distance reason for collapse\_varieties [\#15](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/pull/15) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.3.0a2](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/tree/0.3.0a2) (2026-08-10)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/compare/0.3.0a1...0.3.0a2)
