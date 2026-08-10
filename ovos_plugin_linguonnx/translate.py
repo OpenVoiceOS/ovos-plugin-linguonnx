@@ -1,6 +1,5 @@
 """OVOS translation plugin wrapping the linguonnx offline translator."""
 
-import os
 from typing import Dict, Optional, Set
 
 from ovos_plugin_manager.templates.language import LanguageTranslator
@@ -45,10 +44,30 @@ class LinguONNXTranslatePlugin(LanguageTranslator):
         default graph is ~25 GB, so this is the knob that keeps a long-lived
         server from being OOM-killed.
     ``max_model_mb``
-        Refuse a cold download bigger than this, in MB, instead of holding the
-        request for minutes. Unset by default, which leaves linguonnx's 8192 MB
-        budget in place. Set it low on a host whose cache is pre-warmed, so a
-        surprise fetch fails fast and loudly.
+        Drop any model bigger than this, in MB, from the routing graph before
+        a route is even scored - a *routing* filter, not a download guard.
+        Unset by default, which leaves every model in the graph eligible.
+        Combining this with ``models`` makes linguonnx treat it as an
+        operator-set budget that outranks the ``models`` waiver, per
+        linguonnx's own ``operator_budget_is_set()`` rule; see the linguonnx
+        docs before setting both.
+    ``oversize_fallback``
+        ``False`` by default, which makes ``max_model_mb`` a filter: a
+        language that lives only inside an oversized model becomes
+        unroutable. ``True`` makes the cap a *preference* instead - every
+        pair a model under the cap can serve is still served by that model,
+        and only a pair nothing under the cap covers escalates to the
+        smallest oversized model that does. Set this on a host that caps for
+        load latency rather than for disk, so the cap does not also delete
+        the long tail of languages.
+    ``count_cached_as_free``
+        Whether a model already in the local cache is exempt from
+        ``max_model_mb``. Left unset, linguonnx picks ``True`` normally and
+        ``False`` when ``oversize_fallback`` is on, because a warm cache
+        would otherwise exempt every model there is and make the cap a
+        no-op. Set it explicitly only to overrule that: ``True`` reads the
+        cap as "do not download more than this", ``False`` as "do not load a
+        model bigger than this".
     ``exclude_flagged``
         ``False`` by default. Drop any model linguonnx's own quality sweep
         flags - either precision scoring below 40 chrF against the FLORES-200
@@ -93,7 +112,8 @@ class LinguONNXTranslatePlugin(LanguageTranslator):
         """
         passthrough = ("models", "model", "prefer", "max_hops", "pivot_ranking",
                        "include_noncommercial", "precision", "exclude_flagged",
-                       "min_chrf", "model_cache_size", "num_beams", "max_new_tokens")
+                       "min_chrf", "model_cache_size", "num_beams", "max_new_tokens",
+                       "max_model_mb", "oversize_fallback", "count_cached_as_free")
         return {k: self.config[k] for k in passthrough if k in self.config}
 
     # -- engine -----------------------------------------------------------
@@ -102,11 +122,6 @@ class LinguONNXTranslatePlugin(LanguageTranslator):
     def translator(self):
         """Lazily build (and cache) the linguonnx Translator."""
         if self._translator is None:
-            # linguonnx reads the download budget from the environment at
-            # fetch time, and there is no load_translator argument for it.
-            max_model_mb = self.config.get("max_model_mb")
-            if max_model_mb is not None:
-                os.environ["LINGUONNX_MAX_DOWNLOAD_MB"] = str(int(max_model_mb))
             from linguonnx import load_translator
             self._translator = load_translator(**self.loader_kwargs)
         return self._translator

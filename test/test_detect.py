@@ -10,6 +10,7 @@ def make_mock_detector():
     det = MagicMock()
     det.detect_raw.return_value = ("por_Latn", 0.9)
     det.detect.return_value = "pt"
+    det._label_mapper.to_bcp47.return_value = "pt"
     det.detect_probs.return_value = {"pt": 0.9, "gl": 0.05}
     det.available_languages = {"pt", "en", "gl"}
     return det
@@ -40,20 +41,38 @@ def test_default_config():
     assert plugin.min_confidence == 0.0
 
 
-def test_collapse_varieties_default_true_passthrough():
+def test_collapse_varieties_default_true_collapses_variety():
+    # South Levantine Arabic (ajp) collapses onto the macrolanguage "ar" when
+    # collapse_varieties is on (the default).
     mock_det = make_mock_detector()
+    mock_det.detect_raw.return_value = ("ajp_Arab", 0.9)
+    mock_det._label_mapper.to_bcp47.return_value = "ajp-Arab"
     with patch("linguonnx.load_detector", return_value=mock_det):
         plugin = LinguONNXLangDetectPlugin()
-        plugin.detect("some arabic text")
-        mock_det.detect.assert_called_once_with("some arabic text", collapse_varieties=True)
+        result = plugin.detect("some arabic text")
+        assert result == "ar"
+        mock_det._label_mapper.to_bcp47.assert_called_once_with("ajp_Arab")
 
 
-def test_collapse_varieties_false_passthrough():
+def test_collapse_varieties_false_keeps_variety():
     mock_det = make_mock_detector()
+    mock_det.detect_raw.return_value = ("ajp_Arab", 0.9)
+    mock_det._label_mapper.to_bcp47.return_value = "ajp-Arab"
     with patch("linguonnx.load_detector", return_value=mock_det):
         plugin = LinguONNXLangDetectPlugin({"collapse_varieties": False})
-        plugin.detect("some arabic text")
-        mock_det.detect.assert_called_once_with("some arabic text", collapse_varieties=False)
+        result = plugin.detect("some arabic text")
+        assert result == "ajp-Arab"
+
+
+def test_detect_runs_inference_exactly_once():
+    # detect_raw() alone runs the ONNX forward pass; linguonnx's own detect()
+    # would run it again internally for the same answer, doubling inference
+    # cost for zero new information. detect() must never be called.
+    mock_det = make_mock_detector()
+    with patch("linguonnx.load_detector", return_value=mock_det):
+        LinguONNXLangDetectPlugin().detect("bom dia")
+        mock_det.detect_raw.assert_called_once_with("bom dia")
+        mock_det.detect.assert_not_called()
 
 
 def test_min_confidence_fallback():

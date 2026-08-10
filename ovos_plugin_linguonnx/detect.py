@@ -46,10 +46,20 @@ class LinguONNXLangDetectPlugin(LanguageDetector):
         return self._detector
 
     def detect(self, text: str) -> str:
-        _, confidence = self.detector.detect_raw(text)
+        # detect_raw() runs the ONNX inference; linguonnx's own detect() would
+        # run detect_raw() again internally just to get the same raw label, so
+        # inference would happen twice per call for no new information. The
+        # label -> BCP-47 conversion detect() does afterwards is pure lookup
+        # (no inference), so it is replicated here directly from the already
+        # computed raw label via the detector's own label mapper - the exact
+        # same lookup detect() performs, just without a second forward pass.
+        from linguonnx.detect.labels import collapse_variety
+
+        raw_label, confidence = self.detector.detect_raw(text)
         if confidence < self.min_confidence:
             return self.config.get("lang", "en-US")
-        return self.detector.detect(text, collapse_varieties=self.collapse_varieties)
+        tag = self.detector._label_mapper.to_bcp47(raw_label)
+        return collapse_variety(tag) if self.collapse_varieties else tag
 
     def detect_probs(self, text: str) -> Dict[str, float]:
         return self.detector.detect_probs(text)
