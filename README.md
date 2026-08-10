@@ -10,10 +10,6 @@ are cached, neither needs torch:
 | `LinguONNXLangDetectPlugin` | `opm.lang.detect` | `ovos-lang-detect-plugin-linguonnx` |
 | `LinguONNXTranslatePlugin` | `opm.lang.translate` | `ovos-translate-plugin-linguonnx` |
 
-> This package was called `ovos-lang-detect-plugin-linguonnx` while it only did
-> detection. The plugin **ids** did not change, so existing configuration keeps
-> working; only the distribution name and the Python package did.
-
 ## Install
 
 ```bash
@@ -270,8 +266,7 @@ This repo builds and publishes `ghcr.io/openvoiceos/ovos-plugin-linguonnx`, an
 image that runs both plugins behind
 [`ovos-translate-server`](https://github.com/OpenVoiceOS/ovos-translate-server)
 on port `9686` -- `opm.lang.translate` at `--tx-engine` and `opm.lang.detect`
-at `--detect-engine`. This mirrors the production deployment
-(`ovos-translate-servers/linguonnxsrv`).
+at `--detect-engine`.
 
 ### Quick start
 
@@ -309,15 +304,14 @@ volumes:
 
 This covers both `~/.cache/huggingface` (raw HF blobs) and
 `~/.cache/linguonnx` (linguonnx's own model store). Both are created and
-`chown`ed to the `ovos` user at build time so a bind mount over an empty host
-directory does not leave them root-owned and unwritable -- that produced a
-live `PermissionError` in production before the image accounted for it.
+`chown`ed to the `ovos` user at build time, so a bind mount over an empty host
+directory does not leave them root-owned and unwritable.
 
 **A cold cache is slow, not broken.** The first request for an uncached model
-blocks on a real download; a 4.9 GB model took about 349 seconds to fetch and
-load in production. Set `max_model_mb` (translation config, below) if you
-would rather a cold request fail fast than hang, and prefetch before routing
-real traffic if that latency is unacceptable:
+blocks on a real download; a 4.9 GB model takes about 349 seconds to fetch and
+load. Set `max_model_mb` (translation config, below) if you would rather a
+cold request fail fast than hang, and prefetch before routing real traffic if
+that latency is unacceptable:
 
 ```python
 from linguonnx import load_translator
