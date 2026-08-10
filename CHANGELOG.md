@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.2a1](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/tree/0.3.2a1) (2026-08-10)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/compare/0.3.1a1...0.3.2a1)
+
+**Merged pull requests:**
+
+- fix: nest translation/detection config under top-level language section [\#20](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/pull/20) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.3.1a1](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/tree/0.3.1a1) (2026-08-10)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/compare/0.3.0a3...0.3.1a1)
