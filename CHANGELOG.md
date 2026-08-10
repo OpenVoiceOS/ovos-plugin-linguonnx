@@ -1,12 +1,20 @@
 # Changelog
 
-## [0.0.1a1](https://github.com/OpenVoiceOS/ovos-lang-detect-plugin-linguonnx/tree/0.0.1a1) (2026-08-02)
+## [0.2.0a1](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/tree/0.2.0a1) (2026-08-10)
 
-[Full Changelog](https://github.com/OpenVoiceOS/ovos-lang-detect-plugin-linguonnx/compare/0.0.0...0.0.1a1)
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/compare/0.0.1a1...0.2.0a1)
 
 **Merged pull requests:**
 
-- chore: rename to linguonnx [\#2](https://github.com/OpenVoiceOS/ovos-lang-detect-plugin-linguonnx/pull/2) ([JarbasAl](https://github.com/JarbasAl))
+- feat: add translation plugin and consolidate into ovos-plugin-linguonnx [\#4](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/pull/4) ([JarbasAl](https://github.com/JarbasAl))
+
+## [0.0.1a1](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/tree/0.0.1a1) (2026-08-02)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/compare/0.0.0...0.0.1a1)
+
+**Merged pull requests:**
+
+- chore: rename to linguonnx [\#2](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/pull/2) ([JarbasAl](https://github.com/JarbasAl))
 
 
 
