@@ -4,8 +4,6 @@ from typing import Dict, Optional, Set
 
 from ovos_plugin_manager.templates.language import LanguageDetector
 
-from ovos_lang_detect_plugin_linguonnx.version import __version__
-
 DEFAULT_MODEL = "glotlid-int8"
 
 
@@ -61,6 +59,4 @@ class LinguONNXLangDetectPlugin(LanguageDetector):
         return self.detector.available_languages
 
 
-LanguageDetectorPlugin = LinguONNXLangDetectPlugin
-
-__all__ = ["LinguONNXLangDetectPlugin", "LanguageDetectorPlugin", "__version__"]
+__all__ = ["LinguONNXLangDetectPlugin"]
