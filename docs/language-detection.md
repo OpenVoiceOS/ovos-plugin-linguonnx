@@ -40,14 +40,38 @@ Casual Arabic text comes back as e.g. `ajp-Arab` (South Levantine) rather
 than `ar`, and some Chinese text comes back as `yue-Hani` (Cantonese)
 rather than `zh`.
 
-`linguonnx` itself defaults to reporting these varieties as-is, since that
-fine-grained answer is useful on its own (free dialect identification).
-This plugin flips the default to collapse varieties onto their
-macrolanguage (`ajp-Arab` -> `ar`), because the two things OVOS actually
-does with a detected language tag - picking a TTS voice, picking a
-translation target - only know macrolanguages. A caller getting
-`ajp-Arab` back from a pipeline that only ships `ar` voices would read it
-as unsupported.
+`collapse_varieties` selects which of the two tags `detect()` returns.
 
-Set `collapse_varieties: false` in the plugin config to get `linguonnx`'s
-native per-variety fidelity instead.
+| Setting | South Levantine Arabic | Cantonese |
+|---|---|---|
+| `true` (default) | `ar` | `zh-Hani` |
+| `false` | `ajp-Arab` | `yue-Hani` |
+
+### Why the default collapses
+
+OVOS matches a language tag by `langcodes` tag distance, and it accepts a
+candidate below distance 10. `closest_lang` in `ovos-spec-tools` implements
+that rule. `disambiguate_lang` in `ovos-core` applies it to the
+`detected_lang` context key this plugin writes. `ovos-workshop` applies it to
+locale directories and to converse matchers.
+
+The threshold covers region and script subtags. `ar-SA` matches `ar` at
+distance 4. `pt-BR` matches `pt-PT` at distance 5. A regional dialect
+therefore needs no help from this plugin.
+
+The threshold does not cover a member of a macrolanguage, because `langcodes`
+rates such a member as a separate language. `ajp` is at distance 10 from `ar`.
+`arz` is at distance 10 from `ar`. `yue` is at distance 64 from `zh`. Of the
+47 varieties `linguonnx` maps to a macrolanguage, 27 stay at or above the
+threshold. For those, a variety tag matches nothing. OVOS then discards the
+detection, and the session keeps its previous language.
+`ovos-bidirectional-translation-plugin` is stricter again. It tests the
+detected tag for exact membership of the configured languages, so any variety
+tag fails there.
+
+### When to keep the variety
+
+Set `collapse_varieties: false` when the caller reads the dialect itself, for
+example to log it or to route it. This setting keeps information that the
+default discards. The caller then owns the match against the languages it
+supports.

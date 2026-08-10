@@ -25,12 +25,26 @@ class LinguONNXLangDetectPlugin(LanguageDetector):
 
     @property
     def collapse_varieties(self) -> bool:
-        # linguonnx itself defaults this to False (fidelity: "ajp-Arab" is a
-        # real, useful answer on its own). OVOS callers use the detected tag
-        # to pick a TTS voice or a translation target, and those pipelines
-        # only know macrolanguages - "ajp-Arab" would look unsupported where
-        # "ar" is. So the plugin flips the default to True; set
-        # collapse_varieties: false in config to get linguonnx's raw fidelity.
+        """Whether ``detect`` reports a macrolanguage instead of a variety.
+
+        The default is ``True``. OVOS resolves a language tag with the
+        ``langcodes`` tag distance and accepts a candidate below distance 10
+        (``ovos_core.intent_services.service.IntentService.disambiguate_lang``,
+        ``ovos_workshop.resource_files``, ``ovos_workshop.skills.converse``).
+        That distance handles region and script subtags: ``ar-SA`` resolves to
+        ``ar`` at distance 4, and ``en-GB`` to ``en-US`` at distance 5. It does
+        not handle a member of a macrolanguage, because ``langcodes`` rates
+        such a member as a separate language: ``ajp`` is at distance 10 from
+        ``ar`` and ``yue`` at distance 64 from ``zh``. Of the 47 varieties
+        ``linguonnx`` knows, 27 stay above the threshold, so a raw variety tag
+        is discarded and the session keeps its previous language.
+        ``ovos_bidirectional_translation_plugin`` is stricter again and tests
+        the tag for exact membership of the configured languages.
+
+        Set ``collapse_varieties`` to ``False`` to get the variety tag that
+        ``linguonnx`` detects. Use that setting when the caller reads the
+        dialect itself, for example to log it or to route it.
+        """
         return self.config.get("collapse_varieties", True)
 
     @property
