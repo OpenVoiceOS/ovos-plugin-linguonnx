@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0a2](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/tree/0.3.0a2) (2026-08-10)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/compare/0.3.0a1...0.3.0a2)
+
+**Merged pull requests:**
+
+- docs: split README into docs/ topic files [\#14](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/pull/14) ([JarbasAl](https://github.com/JarbasAl))
+
+## [0.3.0a1](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/tree/0.3.0a1) (2026-08-10)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/compare/0.2.1a2...0.3.0a1)
+
 ## [0.2.1a2](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/tree/0.2.1a2) (2026-08-10)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/compare/0.2.1a1...0.2.1a2)
