@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.1a2](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/tree/0.2.1a2) (2026-08-10)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/compare/0.2.1a1...0.2.1a2)
+
+**Merged pull requests:**
+
+- feat: add Docker packaging and autopublish workflow [\#10](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/pull/10) ([JarbasAl](https://github.com/JarbasAl))
+- docs: fix max\_model\_mb routing semantics, document oversize\_fallback and count\_cached\_as\_free [\#9](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/pull/9) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.2.1a1](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/tree/0.2.1a1) (2026-08-10)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/compare/0.2.0a1...0.2.1a1)
