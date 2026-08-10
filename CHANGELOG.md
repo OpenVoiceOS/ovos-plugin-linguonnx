@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1a1](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/tree/0.3.1a1) (2026-08-10)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/compare/0.3.0a3...0.3.1a1)
+
+**Merged pull requests:**
+
+- fix: forward every load\_translator option, including the memory bounds [\#16](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/pull/16) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.3.0a3](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/tree/0.3.0a3) (2026-08-10)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/compare/0.3.0a2...0.3.0a3)
