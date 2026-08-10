@@ -90,6 +90,64 @@ def test_config_passthrough_to_load_translator():
         mock_load.assert_called_once_with(**cfg)
 
 
+def test_memory_bounding_keys_reach_load_translator():
+    """The two keys an operator needs to stop a server being OOM-killed.
+
+    `max_loaded_mb` bounds what the model cache retains;
+    `max_concurrent_translations` bounds how many models can be in flight,
+    which is the term that actually drives peak memory. Dropping either one
+    silently would leave an operator who set it believing it took effect.
+    """
+    cfg = {"max_loaded_mb": 2000, "max_concurrent_translations": 4}
+    mock_tx = make_mock_translator()
+    with patch("linguonnx.load_translator", return_value=mock_tx) as mock_load:
+        LinguONNXTranslatePlugin(dict(cfg)).translate("hi", "pt", "en")
+        mock_load.assert_called_once_with(**cfg)
+
+
+def test_generation_and_routing_keys_reach_load_translator():
+    cfg = {"pivot_preference": ["en", "es"], "max_routes": 5,
+           "length_penalty": 1.2, "no_repeat_ngram_size": 3}
+    mock_tx = make_mock_translator()
+    with patch("linguonnx.load_translator", return_value=mock_tx) as mock_load:
+        LinguONNXTranslatePlugin(dict(cfg)).translate("hi", "pt", "en")
+        mock_load.assert_called_once_with(**cfg)
+
+
+def test_every_load_translator_parameter_is_forwardable():
+    """The whitelist must not silently drop a linguonnx option.
+
+    A hand-maintained tuple drifts the moment linguonnx grows a parameter,
+    and the failure is silent: the key is accepted from config and thrown
+    away. This compares the two directly so the drift is a test failure
+    instead of a support ticket.
+    """
+    import inspect
+
+    # Deliberately NOT `from linguonnx import load_translator`: the top-level
+    # name is a lazy-import wrapper whose signature is bare *args/**kwargs, so
+    # reading it would leave `accepted` empty and this test would pass without
+    # checking anything. The real function is the contract.
+    from linguonnx.translate import load_translator
+
+    plugin = LinguONNXTranslatePlugin()
+    accepted = {
+        name for name, param in
+        inspect.signature(load_translator).parameters.items()
+        if param.kind not in (param.VAR_POSITIONAL, param.VAR_KEYWORD)
+    }
+    assert len(accepted) > 10, \
+        f"read a suspiciously bare signature ({sorted(accepted)}); this test " \
+        f"would pass vacuously"
+    # Every config key the plugin would forward, discovered by offering it
+    # every parameter linguonnx accepts.
+    plugin.config = {name: object() for name in accepted}
+    forwarded = set(plugin.loader_kwargs)
+    assert accepted - forwarded == set(), \
+        f"load_translator parameters the plugin silently drops: " \
+        f"{sorted(accepted - forwarded)}"
+
+
 def test_unknown_config_keys_are_not_forwarded():
     mock_tx = make_mock_translator()
     with patch("linguonnx.load_translator", return_value=mock_tx) as mock_load:
