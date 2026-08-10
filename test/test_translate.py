@@ -98,26 +98,109 @@ def test_unknown_config_keys_are_not_forwarded():
         mock_load.assert_called_once_with(num_beams=1)
 
 
-def test_max_model_mb_sets_env_and_is_not_a_loader_kwarg():
+def test_max_model_mb_is_forwarded_to_load_translator():
+    # max_model_mb is a routing filter linguonnx's load_translator accepts
+    # directly - it must reach load_translator as a kwarg, not become an
+    # environment variable (that is the download-budget knob, a different
+    # thing).
     mock_tx = make_mock_translator()
-    old = os.environ.pop("LINGUONNX_MAX_DOWNLOAD_MB", None)
-    try:
-        with patch("linguonnx.load_translator", return_value=mock_tx) as mock_load:
-            LinguONNXTranslatePlugin({"max_model_mb": 512}).translate("hi", "pt", "en")
-            mock_load.assert_called_once_with()
-            assert os.environ["LINGUONNX_MAX_DOWNLOAD_MB"] == "512"
-    finally:
-        os.environ.pop("LINGUONNX_MAX_DOWNLOAD_MB", None)
-        if old is not None:
-            os.environ["LINGUONNX_MAX_DOWNLOAD_MB"] = old
+    with patch("linguonnx.load_translator", return_value=mock_tx) as mock_load:
+        LinguONNXTranslatePlugin({"max_model_mb": 512}).translate("hi", "pt", "en")
+        mock_load.assert_called_once_with(max_model_mb=512)
 
 
-def test_max_model_mb_unset_leaves_env_alone():
+def test_max_model_mb_does_not_touch_environ():
+    # Constructing the plugin must never mutate os.environ - that leaks a
+    # per-plugin-instance cap into every other linguonnx consumer sharing the
+    # process.
+    before = dict(os.environ)
+    with patch("linguonnx.load_translator", return_value=make_mock_translator()):
+        LinguONNXTranslatePlugin({"max_model_mb": 512}).translate("hi", "pt", "en")
+    assert os.environ == before
+
+
+def test_max_model_mb_unset_is_not_forwarded():
     mock_tx = make_mock_translator()
-    os.environ.pop("LINGUONNX_MAX_DOWNLOAD_MB", None)
-    with patch("linguonnx.load_translator", return_value=mock_tx):
+    with patch("linguonnx.load_translator", return_value=mock_tx) as mock_load:
         LinguONNXTranslatePlugin().translate("hi", "pt", "en")
-    assert "LINGUONNX_MAX_DOWNLOAD_MB" not in os.environ
+        mock_load.assert_called_once_with()
+
+
+# -- the size-cap policy pair ------------------------------------------------
+#
+# `max_model_mb` alone is not a policy, it is half of one. linguonnx decides
+# what the cap MEANS from two more keys, and both were missing from the
+# passthrough while sitting in the deployed mycroft.conf on
+# translate.openvoiceos.pt - declared, and read by nothing.
+#
+# The half that bites: `count_cached_as_free` defaults to True whenever
+# `oversize_fallback` is not passed. On a host with a pre-warmed cache that
+# exempts every cached model from the cap, so a 500 MB cap over a warm 25 GB
+# cache filters nothing at all. Dropping either key silently turns the cap
+# into a no-op or into a language-deleting filter, and neither failure raises.
+
+
+def test_oversize_fallback_is_forwarded_to_load_translator():
+    mock_tx = make_mock_translator()
+    with patch("linguonnx.load_translator", return_value=mock_tx) as mock_load:
+        LinguONNXTranslatePlugin({"oversize_fallback": True}).translate("hi", "pt", "en")
+        mock_load.assert_called_once_with(oversize_fallback=True)
+
+
+def test_count_cached_as_free_is_forwarded_to_load_translator():
+    mock_tx = make_mock_translator()
+    with patch("linguonnx.load_translator", return_value=mock_tx) as mock_load:
+        LinguONNXTranslatePlugin({"count_cached_as_free": False}).translate("hi", "pt", "en")
+        mock_load.assert_called_once_with(count_cached_as_free=False)
+
+
+def test_count_cached_as_free_false_is_forwarded_not_dropped_as_falsy():
+    """`False` is the value that makes the cap bite; a truthiness test eats it."""
+    mock_tx = make_mock_translator()
+    with patch("linguonnx.load_translator", return_value=mock_tx) as mock_load:
+        LinguONNXTranslatePlugin({"count_cached_as_free": False}).translate("hi", "pt", "en")
+        kwargs = mock_load.call_args.kwargs
+        assert "count_cached_as_free" in kwargs
+        assert kwargs["count_cached_as_free"] is False
+
+
+def test_the_deployed_production_config_arrives_intact():
+    """The exact `linguonnxsrv/conf/mycroft.conf` from translate.openvoiceos.pt.
+
+    Asserted as one call rather than key by key, because the bug being pinned
+    was a whole-policy bug: `max_model_mb` arrived and the two keys that give
+    it its meaning did not, which is worse than none of them arriving.
+    """
+    cfg = {"prefer": "dedicated", "max_hops": 2, "pivot_ranking": "auto",
+           "include_noncommercial": False, "precision": "int8",
+           "model_cache_size": 4, "num_beams": 4, "max_new_tokens": 512,
+           "max_model_mb": 500, "oversize_fallback": True,
+           "count_cached_as_free": False}
+    mock_tx = make_mock_translator()
+    with patch("linguonnx.load_translator", return_value=mock_tx) as mock_load:
+        LinguONNXTranslatePlugin(dict(cfg)).translate("hi", "pt", "en")
+        mock_load.assert_called_once_with(**cfg)
+
+
+def test_the_size_cap_keys_are_not_defaulted_when_unset():
+    """linguonnx owns its defaults - especially the `count_cached_as_free`
+    tri-state, which picks False under a fallback and True without one. A
+    default invented here would overwrite that choice."""
+    mock_tx = make_mock_translator()
+    with patch("linguonnx.load_translator", return_value=mock_tx) as mock_load:
+        LinguONNXTranslatePlugin({"max_model_mb": 500}).translate("hi", "pt", "en")
+        kwargs = mock_load.call_args.kwargs
+        assert kwargs == {"max_model_mb": 500}
+
+
+def test_the_size_cap_keys_do_not_touch_environ():
+    """Same guarantee `max_model_mb` already has: no cross-instance leakage."""
+    before = dict(os.environ)
+    with patch("linguonnx.load_translator", return_value=make_mock_translator()):
+        LinguONNXTranslatePlugin({"max_model_mb": 500,
+                                  "oversize_fallback": True,
+                                  "count_cached_as_free": False}).translate("hi", "pt", "en")
+    assert os.environ == before
 
 
 def test_available_languages_is_a_mutable_set():
