@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.2a2](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/tree/0.3.2a2) (2026-08-11)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/compare/0.3.2a1...0.3.2a2)
+
+**Merged pull requests:**
+
+- docs: deployment guide for a production translation service [\#22](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/pull/22) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.3.2a1](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/tree/0.3.2a1) (2026-08-10)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/compare/0.3.1a1...0.3.2a1)
