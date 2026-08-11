@@ -6,6 +6,9 @@ image that runs both plugins behind
 on port `9686` -- `opm.lang.translate` at `--tx-engine` and `opm.lang.detect`
 at `--detect-engine`.
 
+For cache sizing, prefetching, memory limits and a verification checklist, see
+[deployment.md](deployment.md).
+
 ## Quick start
 
 ```bash
@@ -49,7 +52,8 @@ directory does not leave them root-owned and unwritable.
 blocks on a real download; a 4.9 GB model takes about 349 seconds to fetch and
 load. Set `max_model_mb` (see [configuration.md](configuration.md)) if you
 would rather a cold request fail fast than hang, and prefetch before routing
-real traffic if that latency is unacceptable:
+real traffic if that latency is unacceptable (see
+[deployment.md](deployment.md#prefetch-before-you-serve)):
 
 ```python
 from linguonnx import load_translator
