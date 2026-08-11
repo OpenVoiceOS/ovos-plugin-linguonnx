@@ -42,6 +42,8 @@ tx.translate("Good morning", target="gl", source="en")
 - [docs/configuration.md](docs/configuration.md) — the full translation
   config reference, including the size/fallback routing budget.
 - [docs/docker.md](docs/docker.md) — running both plugins as a server image.
+- [docs/deployment.md](docs/deployment.md) — cache mounts, prefetching, memory
+  sizing, and the verification checklist for a production service.
 - [docs/errors.md](docs/errors.md) — what `translate()` raises and how to
   map it to HTTP status codes.
 
