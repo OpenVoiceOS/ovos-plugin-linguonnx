@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.2a3](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/tree/0.3.2a3) (2026-08-13)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/compare/0.3.2a2...0.3.2a3)
+
+**Merged pull requests:**
+
+- build: install dependencies from PyPI instead of git [\#24](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/pull/24) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.3.2a2](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/tree/0.3.2a2) (2026-08-11)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/compare/0.3.2a1...0.3.2a2)
