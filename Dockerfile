@@ -35,9 +35,30 @@ COPY . /app
 #
 # The plugin itself (this repo, opm.lang.detect + opm.lang.translate) is
 # installed from the local checkout, so its version always matches the image.
+# Both dependencies come from PyPI rather than git. A git install pins the
+# image to a branch or a commit that no index knows about: it cannot be
+# reproduced from the published metadata, it silently drifts when the branch
+# moves, and it keeps building long after the branch is merged and deleted.
+#
+#   ovos-translate-server[mcp]>=0.10.0a1
+#       The branch this used to track (fix/plugin-errors-are-not-500) is
+#       merged; 0.9.1a1 is the first alpha carrying it, verified from the
+#       wheel: plugin config resolves from mycroft.conf, and plugin failures
+#       answer with a reason instead of a bare 500. The [mcp] extra pulls
+#       fastmcp so the image can serve the MCP endpoint.
+#
+#   linguonnx[distance,opennmt,indic]>=0.12.0a1
+#       The SHA this used to pin resolves to 0.10.0a1, but that pin no longer
+#       holds: this plugin's own pyproject requires linguonnx>=0.12.0a1, and
+#       the `pip install .` on the next line upgrades straight past the pin.
+#       The floor is stated here to match, so the resolver is not silently
+#       overruling the Dockerfile. The extras are why the line exists at all
+#       -- the plugin depends on bare `linguonnx`, and without distance /
+#       opennmt / indic those model families are in the routing graph but
+#       raise ImportError the moment a route picks one.
 RUN pip install --no-cache-dir \
-        git+https://github.com/OpenVoiceOS/ovos-translate-server.git@fix/plugin-errors-are-not-500 \
-        "linguonnx[distance,opennmt,indic] @ git+https://github.com/TigreGotico/linguonnx.git@f28b379a247bfde46b778de6a02fd09bc1209247" \
+        "ovos-translate-server[mcp]>=0.10.0a1" \
+        "linguonnx[distance,opennmt,indic]>=0.12.0a1" \
     && pip install --no-cache-dir .
 
 # Create the cache parents OWNED BY ovos before any bind mount lands on them.
@@ -65,6 +86,10 @@ EXPOSE 9686
 # there across restarts. A cold model load is slow, not broken: a 4.9 GB
 # model took ~349s to fetch and load in production. Prefetch the cache before
 # traffic if that latency is unacceptable on first request; see README.md.
+# --mcp mounts the MCP endpoint at /mcp. From 0.10.0a1 it is opt-in: installing
+# the [mcp] extra no longer mounts it automatically, so every OVOS server now
+# behaves the same way and the flag has to be passed explicitly.
 ENTRYPOINT ["ovos-translate-server", "--tx-engine", "ovos-translate-plugin-linguonnx", \
             "--detect-engine", "ovos-lang-detect-plugin-linguonnx", \
+            "--mcp", \
             "--port", "9686", "--host", "0.0.0.0"]
