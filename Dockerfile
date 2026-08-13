@@ -40,7 +40,7 @@ COPY . /app
 # reproduced from the published metadata, it silently drifts when the branch
 # moves, and it keeps building long after the branch is merged and deleted.
 #
-#   ovos-translate-server[mcp]>=0.9.1a1
+#   ovos-translate-server[mcp]>=0.10.0a1
 #       The branch this used to track (fix/plugin-errors-are-not-500) is
 #       merged; 0.9.1a1 is the first alpha carrying it, verified from the
 #       wheel: plugin config resolves from mycroft.conf, and plugin failures
@@ -57,7 +57,7 @@ COPY . /app
 #       opennmt / indic those model families are in the routing graph but
 #       raise ImportError the moment a route picks one.
 RUN pip install --no-cache-dir \
-        "ovos-translate-server[mcp]>=0.9.1a1" \
+        "ovos-translate-server[mcp]>=0.10.0a1" \
         "linguonnx[distance,opennmt,indic]>=0.12.0a1" \
     && pip install --no-cache-dir .
 
@@ -86,6 +86,10 @@ EXPOSE 9686
 # there across restarts. A cold model load is slow, not broken: a 4.9 GB
 # model took ~349s to fetch and load in production. Prefetch the cache before
 # traffic if that latency is unacceptable on first request; see README.md.
+# --mcp mounts the MCP endpoint at /mcp. From 0.10.0a1 it is opt-in: installing
+# the [mcp] extra no longer mounts it automatically, so every OVOS server now
+# behaves the same way and the flag has to be passed explicitly.
 ENTRYPOINT ["ovos-translate-server", "--tx-engine", "ovos-translate-plugin-linguonnx", \
             "--detect-engine", "ovos-lang-detect-plugin-linguonnx", \
+            "--mcp", \
             "--port", "9686", "--host", "0.0.0.0"]
