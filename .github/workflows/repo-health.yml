@@ -10,4 +10,4 @@ jobs:
     uses: OpenVoiceOS/gh-automations/.github/workflows/repo-health.yml@dev
     secrets: inherit
     with:
-      version_file: 'ovos_lang_detect_plugin_lingonnx/version.py'
+      version_file: 'ovos_plugin_linguonnx/version.py'
