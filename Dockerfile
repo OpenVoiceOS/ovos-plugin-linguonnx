@@ -5,7 +5,7 @@
 # they need a server front-end, so this image runs ovos-translate-server with
 # both engines wired to this plugin, matching the production deployment at
 # ovos-translate-servers/linguonnxsrv on ser9.
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends git \
