@@ -10,5 +10,5 @@ jobs:
     uses: OpenVoiceOS/gh-automations/.github/workflows/release-preview.yml@dev
     secrets: inherit
     with:
-      package_name: 'ovos_lang_detect_plugin_lingonnx'
-      version_file: 'ovos_lang_detect_plugin_lingonnx/version.py'
+      package_name: 'ovos_plugin_linguonnx'
+      version_file: 'ovos_plugin_linguonnx/version.py'
