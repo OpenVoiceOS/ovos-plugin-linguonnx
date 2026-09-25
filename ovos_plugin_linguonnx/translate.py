@@ -140,7 +140,12 @@ class LinguONNXTranslatePlugin(LanguageTranslator):
                        "max_concurrent_translations",
                        "num_beams", "max_new_tokens", "length_penalty",
                        "no_repeat_ngram_size",
-                       "max_model_mb", "oversize_fallback", "count_cached_as_free")
+                       "max_model_mb", "oversize_fallback",
+                       "count_cached_as_free",
+                       # added after the list fell behind linguonnx: a user who
+                       # set providers, to choose an ONNX execution provider,
+                       # had it accepted from config and thrown away
+                       "fetch_on_demand", "providers")
         return {k: self.config[k] for k in passthrough if k in self.config}
 
     # -- engine -----------------------------------------------------------
