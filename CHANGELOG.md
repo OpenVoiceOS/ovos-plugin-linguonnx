@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.2a4](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/tree/0.3.2a4) (2026-09-25)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/compare/0.3.2a3...0.3.2a4)
+
+**Merged pull requests:**
+
+- Configure Renovate [\#1](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/pull/1) ([renovate[bot]](https://github.com/apps/renovate))
+
 ## [0.3.2a3](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/tree/0.3.2a3) (2026-08-13)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/compare/0.3.2a2...0.3.2a3)
