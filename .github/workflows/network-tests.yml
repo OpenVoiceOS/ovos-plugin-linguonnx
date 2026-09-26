@@ -1,0 +1,29 @@
+name: Network Tests
+
+# The suite deselects the `network` marker, so `test_real_translation_end_to_end`
+# runs nowhere on a pull request. That is deliberate: it downloads a model, and
+# a download failure must not redden an unrelated pull request. This job is the
+# home for it. A command-line `-m` overrides the one in `addopts`, so the marker
+# is selected here even though the default run deselects it.
+#
+# Weekly, plus a button. A model download does not need to run per commit, and
+# the failure this catches is a route or a tokenizer moving under the plugin,
+# which happens on linguonnx's release cadence and not on this repository's.
+
+on:
+  schedule:
+    # Mondays, 05:17 UTC. Off the hour, because the hour is a stampede.
+    - cron: '17 5 * * 1'
+  workflow_dispatch:
+
+jobs:
+  network:
+    uses: OpenVoiceOS/gh-automations/.github/workflows/build-tests.yml@dev
+    secrets: inherit
+    with:
+      # One version. This exercises the model path, not version compatibility;
+      # the pull-request matrix already covers 3.10 to 3.14.
+      python_versions: '["3.11"]'
+      install_extras: 'network'
+      test_path: 'test'
+      pytest_args: "-m network"
