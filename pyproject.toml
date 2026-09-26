@@ -38,3 +38,8 @@ include = ["ovos_plugin_linguonnx*"]
 
 [tool.pytest.ini_options]
 markers = ["network: downloads models from HuggingFace and runs them"]
+# Registering the marker does not deselect anything. Without this line the
+# network test ran on every plain `pytest test`, downloaded a model and
+# failed, although its own docstring says it is skipped unless asked for.
+# Run it with `pytest -m network`.
+addopts = "-m 'not network'"
