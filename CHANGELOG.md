@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.3a1](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/tree/0.3.3a1) (2026-09-26)
+
+[Full Changelog](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/compare/0.3.2a4...0.3.3a1)
+
+**Merged pull requests:**
+
+- fix: forward every load\_translator option, and deselect the network test [\#30](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/pull/30) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.3.2a4](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/tree/0.3.2a4) (2026-09-25)
 
 [Full Changelog](https://github.com/OpenVoiceOS/ovos-plugin-linguonnx/compare/0.3.2a3...0.3.2a4)
