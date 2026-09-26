@@ -16,7 +16,7 @@ jobs:
       PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
       MATRIX_TOKEN: ${{ secrets.MATRIX_TOKEN }}
     with:
-      version_file: 'ovos_lang_detect_plugin_lingonnx/version.py'
+      version_file: 'ovos_plugin_linguonnx/version.py'
       publish_pypi: true
       publish_release: true
       sync_dev: true

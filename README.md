@@ -1,70 +1,55 @@
-# ovos-lang-detect-plugin-lingonnx
+# ovos-plugin-linguonnx
 
-An OVOS language-detection plugin. It wraps
-[`lingonnx`](https://github.com/TigreGotico/lingonnx), which runs the
-[`TigreGotico/glotlid-onnx`](https://huggingface.co/TigreGotico/glotlid-onnx)
-export of GlotLID on `onnxruntime`, CPU-only, no torch.
+OVOS language plugins built on
+[`linguonnx`](https://github.com/OpenVoiceOS/linguonnx). One package, two
+plugins, both CPU-only on `onnxruntime`, both fully offline after the models
+are cached, neither needs torch:
+
+| Plugin | Entry point group | Plugin id |
+|---|---|---|
+| `LinguONNXLangDetectPlugin` | `opm.lang.detect` | `ovos-lang-detect-plugin-linguonnx` |
+| `LinguONNXTranslatePlugin` | `opm.lang.translate` | `ovos-translate-plugin-linguonnx` |
 
 ## Install
 
 ```bash
-pip install ovos-lang-detect-plugin-lingonnx
+pip install ovos-plugin-linguonnx
 ```
 
-The model downloads from HuggingFace on first use and is cached under
-`~/.cache/lingonnx/models/<model_id>/`. Constructing the plugin does not
-trigger this download; it happens on the first call to `detect`,
-`detect_probs`, or `available_languages`.
+Models download from HuggingFace on first use and are cached under
+`~/.cache/linguonnx/models/<model_id>/`. Constructing either plugin does not
+trigger a download; the first real call does. On a server, prefetch instead —
+see [Prefetching](docs/translation.md#prefetching).
 
-## Configuration
+## Usage
 
-```json
-{
-  "language_detection": {
-    "module": "ovos-lang-detect-plugin-lingonnx",
-    "ovos-lang-detect-plugin-lingonnx": {
-      "model": "glotlid-int8",
-      "collapse_varieties": true,
-      "min_confidence": 0.0,
-      "lang": "en-US"
-    }
-  }
-}
+```python
+from ovos_plugin_linguonnx import LinguONNXLangDetectPlugin, LinguONNXTranslatePlugin
+
+det = LinguONNXLangDetectPlugin()
+det.detect("bom dia")   # 'pt'
+
+tx = LinguONNXTranslatePlugin()
+tx.translate("Good morning", target="gl", source="en")
 ```
 
-- `model`: `"glotlid-int8"` (default, quantized, 419 MB) or `"glotlid"`
-  (fp32, 1.68 GB). Both cover the same 2102 GlotLID labels; the int8 model
-  has no measured accuracy loss, so there is no reason to prefer the fp32
-  one unless you need it for some other purpose.
-- `collapse_varieties`: see below.
-- `min_confidence`: if the model's top confidence is below this, `detect()`
-  returns `self.config.get("lang", "en-US")` instead of the detected tag.
-  Default `0.0`, meaning no fallback ever triggers.
-- `lang`: the fallback tag used when `min_confidence` isn't met. Default
-  `"en-US"`.
+## Documentation
 
-## Language varieties
-
-GlotLID identifies individual language varieties, not macrolanguages.
-Casual Arabic text comes back as e.g. `ajp-Arab` (South Levantine) rather
-than `ar`, and some Chinese text comes back as `yue-Hani` (Cantonese)
-rather than `zh`.
-
-`lingonnx` itself defaults to reporting these varieties as-is, since that
-fine-grained answer is useful on its own (free dialect identification).
-This plugin flips the default to collapse varieties onto their
-macrolanguage (`ajp-Arab` -> `ar`), because the two things OVOS actually
-does with a detected language tag - picking a TTS voice, picking a
-translation target - only know macrolanguages. A caller getting
-`ajp-Arab` back from a pipeline that only ships `ar` voices would read it
-as unsupported.
-
-Set `collapse_varieties: false` in the plugin config to get `lingonnx`'s
-native per-variety fidelity instead.
+- [docs/language-detection.md](docs/language-detection.md) — detection
+  config, model choice, and language varieties.
+- [docs/translation.md](docs/translation.md) — translation config, routing,
+  and prefetching.
+- [docs/configuration.md](docs/configuration.md) — the full translation
+  config reference, including the size/fallback routing budget.
+- [docs/docker.md](docs/docker.md) — running both plugins as a server image.
+- [docs/deployment.md](docs/deployment.md) — cache mounts, prefetching, memory
+  sizing, and the verification checklist for a production service.
+- [docs/errors.md](docs/errors.md) — what `translate()` raises and how to
+  map it to HTTP status codes.
 
 ## Credits
 
-- [lingonnx](https://github.com/TigreGotico/lingonnx) - the detection engine
-  this plugin wraps.
-- [TigreGotico/glotlid-onnx](https://huggingface.co/TigreGotico/glotlid-onnx) -
-  the ONNX export of GlotLID that `lingonnx` runs.
+- [linguonnx](https://github.com/OpenVoiceOS/linguonnx) — the detection and
+  translation engine this package wraps.
+- [TigreGotico/glotlid-onnx](https://huggingface.co/TigreGotico/glotlid-onnx) —
+  the ONNX export of GlotLID that `linguonnx` runs for detection.
