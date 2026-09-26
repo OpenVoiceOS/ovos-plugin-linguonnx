@@ -19,6 +19,12 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["pytest"]
+# The network test loads a real model. linguonnx picks the tokenizer from
+# the model it routes to, and the current gl->en route needs the OpenNMT-BPE
+# tokenizer, which lives behind linguonnx's own "opennmt" extra. Without it
+# the test fails on an ImportError for sacremoses before it reaches the
+# network. A future route change can need a different tokenizer extra.
+network = ["pytest", "linguonnx[opennmt]"]
 
 [project.urls]
 Homepage = "https://github.com/OpenVoiceOS/ovos-plugin-linguonnx"
